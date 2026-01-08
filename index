@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biodata Siswa Sekolah Dasar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .header-float { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        th { cursor: pointer; user-select: none; }
+        th:hover { background-color: rgba(0,0,0,0.1); }
+        .tab-button.active { background-color: #2563eb; color: white; }
+    </style>
+</head>
+<body class="h-full bg-gray-100">
+    <div id="app-container" class="min-h-full flex flex-col w-full">
+        <header id="header" class="bg-blue-600 header-float rounded-b-3xl px-6 py-6 mb-8 text-white text-center">
+            <h1 class="text-3xl font-bold">Data Siswa SD Negeri 2 Pandansari</h1>
+        </header>
+
+        <main class="flex-1 px-6 pb-6">
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <input type="text" id="search-input" placeholder="Cari data..." class="w-full px-4 py-2 border rounded-lg">
+                    <select id="filter-kelas" class="px-4 py-2 border rounded-lg"><option value="">Semua Kelas</option></select>
+                    <button id="reset-btn" class="bg-gray-500 text-white px-4 py-2 rounded-lg">Reset</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead class="bg-blue-500 text-white">
+                            <tr>
+                                <th class="p-3 border" onclick="sortTable('Nama')">Nama ↕</th>
+                                <th class="p-3 border" onclick="sortTable('Kelas')">Kelas ↕</th>
+                                <th class="p-3 border" onclick="sortTable('NISN')">NISN ↕</th>
+                                <th class="p-3 border" onclick="sortTable('Alamat')">Alamat ↕</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <tr><td colspan="4" class="text-center p-4">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let allData = [];
+        let filteredData = [];
+        let sortDirection = 'asc';
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR8EbUUCJAxWs6PwfjKKB8pCFURgglFZxkYL80vj6PL_ZlZCNAOa8S-8Pn0BaWSCDixNhcjwy-a29XH/pub?gid=0&single=true&output=csv';
+
+        async function loadData() {
+            try {
+                const response = await fetch(CSV_URL);
+                const text = await response.text();
+                const rows = text.split('\n').slice(1);
+                allData = rows.map(row => {
+                    const cols = row.split(',');
+                    return { Nama: cols[1], Kelas: cols[4], NISN: cols[5], Alamat: cols[7] };
+                });
+                filteredData = [...allData];
+                renderTable();
+            } catch (e) { console.error("Gagal load data", e); }
+        }
+
+        function sortTable(col) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            filteredData.sort((a, b) => {
+                if (a[col] < b[col]) return sortDirection === 'asc' ? -1 : 1;
+                if (a[col] > b[col]) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = filteredData.map(row => `
+                <tr class="border-b hover:bg-blue-50">
+                    <td class="p-3 border">${row.Nama || ''}</td>
+                    <td class="p-3 border">${row.Kelas || ''}</td>
+                    <td class="p-3 border">${row.NISN || ''}</td>
+                    <td class="p-3 border">${row.Alamat || ''}</td>
+                </tr>
+            `).join('');
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
